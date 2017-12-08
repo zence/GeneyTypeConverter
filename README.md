@@ -3,7 +3,7 @@
 ## FUNCTIONALITY
 * The Geney Type Converter
     * Call `python type_converter.py [input directory] [output directory]`
-    * Will convert `input directory` contents into `[output directory]`
+    * Will convert `[input directory]` contents into `[output directory]`
     
 * `[output directory]` will end up with the following contents:
     * `metadata.sqlite`: SQLite database containing metadata and indices
@@ -14,3 +14,7 @@
 ## IMPORTANT
 * `sql_converter`, `hdf5_converter`, `json_maker`, and `description_maker` are *NOT* to be called alone
 * `test_converter` is a unittest, but requires a specified test dataset for proper functionality
+
+## UPDATES
+* Dec-8-2017:
+    * '/' is now allowed at the end of directory paths

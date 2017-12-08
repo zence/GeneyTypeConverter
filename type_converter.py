@@ -139,7 +139,13 @@ class UniqueVarChecker:
         """
             To be called from Main
             NOTE: May be unnecessary at this point
+            NOTE: v1.0.1 '/' is now allowed at the end of directory paths
         """
+        in_d = in_d.rstrip('/')
+        out_d = out_d.rstrip('/')
+        if not os.path.exists(in_d):
+            print("\033[91m[ERROR]\033[0m Input path not found :(")
+            return
         self.seconds = time.time()
 
         #NOTE: I no longer use these, but will keep this for reference

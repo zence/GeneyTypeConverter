@@ -92,11 +92,7 @@ class UniqueVarChecker:
         """
             Final method to run/Runs other python classes
         """
-        if not os.path.exists(out_d):
-            os.mkdir(out_d)
-        else:
-            shutil.rmtree(out_d)
-            os.mkdir(out_d)
+        
         
         conn = sqlite3.connect('/'.join([out_d, 'metadata.sqlite']))
         curs = conn.cursor()
@@ -130,12 +126,12 @@ class UniqueVarChecker:
         h5Converter = H5Converter()
         h5Converter.convert('/'.join([in_d, 'data.tsv.gz']), 1,
                     '/'.join([out_d, 'data.h5']))
-        print("\n\033[5;95m^_^ ありがとうございました ^_^\033[0m \n\nThank you for using!")
+        #print("\n\033[5;95m^_^ ありがとうございました ^_^\033[0m \n\nThank you for using!")
         os.remove('/'.join([in_d, 'temp.sqlite']))
         
 
 
-    def check(self, in_d, out_d):
+    def check(self, in_d, out_d, force):
         """
             To be called from Main
             NOTE: May be unnecessary at this point
@@ -146,6 +142,22 @@ class UniqueVarChecker:
         if not os.path.exists(in_d):
             print("\033[91m[ERROR]\033[0m Input path not found :(")
             return
+        if os.path.exists(out_d):
+            if not force:
+                print("\033[93m[WARNING]\033[0m Output directory ["
+                        + out_d + "] already exists, delete? [y/n]")
+                reply = input()
+                if reply.lower() == 'y' or reply.lower() == 'yes':
+                    shutil.rmtree(out_d)
+                    os.mkdir(out_d)
+                else:
+                    print('\033[94mExiting\033[0m')
+                    return
+            else:
+                shutil.rmtree(out_d)
+                os.mkdir(out_d)
+        else:
+            os.mkdir(out_d)
         self.seconds = time.time()
 
         #NOTE: I no longer use these, but will keep this for reference
@@ -178,7 +190,7 @@ class Main:
     def __init__(self):
         args = self.parse_args()
         self.checker = UniqueVarChecker()
-        self.checker.check(args.input_directory, args.output_directory)
+        self.checker.check(args.input_directory, args.output_directory, args.force)
 
     def parse_args(self):
         parsInputHelp = "path to directory where data exists and output "
@@ -190,6 +202,8 @@ class Main:
                             help=parsInputHelp)
         parser.add_argument("output_directory", type=str,
                             help=parsOutputHelp)
+        parser.add_argument("-f", "--force", action="store_true",
+                            help="run program without warnings")
         args = parser.parse_args()
         
         return args

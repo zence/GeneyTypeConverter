@@ -76,12 +76,25 @@ class JsonMaker:
         conn = sqlite3.connect('/'.join([out_d, 'metadata.sqlite']))
         curs = conn.cursor()
 
+        curs.execute('''SELECT variableType
+                        FROM variableTable
+                        WHERE variableName = "''' + variable + '"')
+                    
+        variableType = curs.fetchone()[0]
+
         with conn:
             unique_vals = self.getUnique(in_d, variable)
-            curs.execute('''UPDATE variableTable
-                        SET numOptions = ''' + str(len(unique_vals)) + ''',
-                        options = "''' + ','.join(unique_vals) + '''"
-                        WHERE variableName = "''' + variable + '"')
+            if variableType == 'text':
+                curs.execute('''UPDATE variableTable
+                            SET numOptions = ''' + str(len(unique_vals)) + ''',
+                            options = "''' + ','.join(unique_vals) + '''"
+                            WHERE variableName = "''' + variable + '"')
+            else:
+                curs.execute('''UPDATE variableTable
+                            SET numOptions = ''' + str(len(unique_vals)) + ''',
+                            options = "''' +
+                            min(unique_vals) + ',' + max(unique_vals) + '''"
+                            WHERE variableName = "''' + variable + '"')
 
     def putAll(self, in_d, out_d, typesDict):
         """

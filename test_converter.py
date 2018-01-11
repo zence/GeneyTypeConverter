@@ -182,6 +182,8 @@ class TestConversion(unittest.TestCase):
         curs.execute('''SELECT options
                         FROM variableTable
                         WHERE variableName = "Paranoia"''')
+
+        unique_vals = jsonMaker.getUnique("Test_Data", "Paranoia")
         
         self.assertEqual(curs.fetchone()[0], 
-                ','.join(jsonMaker.getUnique("Test_Data", "Paranoia")))
+                ','.join([min(unique_vals), max(unique_vals)]))

@@ -81,7 +81,7 @@ class JsonMaker:
             curs.execute('''UPDATE
                         SET numOptions = ''' + str(len(unique_vals)) + ''',
                         options = "''' + ','.join(unique_vals) + '''"
-                        WHERE variableName = "''' + variableName + '"')
+                        WHERE variableName = "''' + variable + '"')
 
     def putAll(self, in_d, out_d, typesDict):
         """
@@ -120,12 +120,12 @@ class JsonMaker:
                         curs.execute('''UPDATE
                                     SET numOptions = ''' + str(len(unique_vals)) + ''',
                                     options = "''' + ','.join(unique_vals) + '''"
-                                    WHERE variableName = "''' + variableName + '"')
+                                    WHERE variableName = "''' + variable + '"')
                     else:
                         curs.execute('''UPDATE
                                     SET numOptions = ''' + str(len(curSet)) + ''',
                                     options = "null"
-                                    WHERE variableName = "''' + variableName + '"')
+                                    WHERE variableName = "''' + variable + '"')
         
     def createJson(self, in_d, out_d, typesDict):
         features = self.getFeatures(in_d)

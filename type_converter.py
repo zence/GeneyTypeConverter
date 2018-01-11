@@ -127,6 +127,9 @@ class UniqueVarChecker:
         h5Converter.convert('/'.join([in_d, 'data.tsv.gz']), 1,
                     '/'.join([out_d, 'data.h5']))
         #print("\n\033[5;95m^_^ ありがとうございました ^_^\033[0m \n\nThank you for using!")
+
+        #NOTE: test_converter.py will not function properly if this line is
+        #           not commented out
         os.remove('/'.join([in_d, 'temp.sqlite']))
         
 

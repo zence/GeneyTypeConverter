@@ -65,7 +65,7 @@ class TestConversion(unittest.TestCase):
         except:
             pass
         conv = UniqueVarChecker()
-        conv.check(TEST_IN_DIR, TEST_OUT_DIR)
+        conv.check(TEST_IN_DIR, TEST_OUT_DIR, True)
         cls.hdf = h5py.File('/'.join([TEST_OUT_DIR, "data.h5"]), 'r')
         cls.conn = sqlite3.connect('/'.join([TEST_OUT_DIR, "metadata.sqlite"]))
         stream = open('/'.join([TEST_OUT_DIR, "description.json"]), 'r')
@@ -174,4 +174,14 @@ class TestConversion(unittest.TestCase):
             for j in range(0,3):
                 self.assertAlmostEqual(data[i][j], df.iloc[i,j])
 
+    def test_Json_Maker(self):
+        curs = self.__class__.conn.cursor()
+        jsonMaker = JsonMaker()
+        jsonMaker.putOne("Test_Data", "Test_Case", "Paranoia")
 
+        curs.execute('''SELECT options
+                        FROM variableTable
+                        WHERE variableName = "Paranoia"''')
+        
+        self.assertEqual(curs.fetchone()[0], 
+                ','.join(jsonMaker.getUnique("Test_Data", "Paranoia")))

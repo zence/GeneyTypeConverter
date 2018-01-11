@@ -145,8 +145,11 @@ class UniqueVarChecker:
         if os.path.exists(out_d):
             if not force:
                 print("\033[93m[WARNING]\033[0m Output directory ["
-                        + out_d + "] already exists, delete? [y/n]")
-                reply = input()
+                        + out_d + "] already exists, delete? [y/n] (default: y)")
+                try:
+                    reply = input()
+                except EOFError:
+                    reply = 'y'
                 if reply.lower() == 'y' or reply.lower() == 'yes':
                     shutil.rmtree(out_d)
                     os.mkdir(out_d)

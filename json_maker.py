@@ -78,7 +78,7 @@ class JsonMaker:
 
         with conn:
             unique_vals = self.getUnique(in_d, variable)
-            curs.execute('''UPDATE
+            curs.execute('''UPDATE variableTable
                         SET numOptions = ''' + str(len(unique_vals)) + ''',
                         options = "''' + ','.join(unique_vals) + '''"
                         WHERE variableName = "''' + variable + '"')
@@ -97,7 +97,7 @@ class JsonMaker:
                 
                 if cur_type == "integer":
                     unique_vals = self.getUnique(in_d, variable)
-                    curs.execute('''UPDATE
+                    curs.execute('''UPDATE variableTable
                                 SET numOptions = ''' + 
                                 str(len(unique_vals)) + ''',
                                     options = "''' +
@@ -106,7 +106,7 @@ class JsonMaker:
                                 variable + '"')
                 elif cur_type == "real":
                     unique_vals = self.getUnique(in_d, variable)
-                    curs.execute('''UPDATE
+                    curs.execute('''UPDATE variableTable
                                 SET numOptions = ''' + 
                                 str(len(unique_vals)) + ''',
                                     options = "''' +
@@ -117,12 +117,12 @@ class JsonMaker:
                     unique_count = self.countUnique(in_d, variable)
                     if unique_count < self.JSON_LIMIT:
                         unique_vals = self.getUnique(in_d, variable)
-                        curs.execute('''UPDATE
+                        curs.execute('''UPDATE variableTable
                                     SET numOptions = ''' + str(len(unique_vals)) + ''',
                                     options = "''' + ','.join(unique_vals) + '''"
                                     WHERE variableName = "''' + variable + '"')
                     else:
-                        curs.execute('''UPDATE
+                        curs.execute('''UPDATE variableTable
                                     SET numOptions = ''' + str(len(curSet)) + ''',
                                     options = "null"
                                     WHERE variableName = "''' + variable + '"')

@@ -84,6 +84,8 @@ class UniqueVarChecker:
                     curs.execute('''INSERT INTO tempTable
                                     VALUES ("''' + variable + '''"
                                     , "''' + value + '")')
+            curs.execute('''CREATE INDEX idx_temp
+                            ON tempTable (variable, value);''')
         return typesDict
 
 
@@ -131,7 +133,7 @@ class UniqueVarChecker:
 
         #NOTE: test_converter.py will not function properly if this line is
         #           not commented out
-        #os.remove('/'.join([in_d, 'temp.sqlite']))
+        os.remove('/'.join([in_d, 'temp.sqlite']))
         
 
 

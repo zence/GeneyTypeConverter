@@ -10,11 +10,10 @@ class Converter:
         self.in_d = in_d
         self.out_d = out_d
         self.seconds = time.time()
+        self.CHUNK_SIZE = 10000
 
-    def addSample(self, sampleName):
+    def addSample(self, sampleName, conn):
         sampleID = 0
-        conn = sqlite3.connect('/'.join([self.out_d,
-                                    'metadata.sqlite']))
         curs = conn.cursor()
 
         ##TODO: Prep this for first insert
@@ -37,12 +36,10 @@ class Converter:
 
         return sampleName
 
-    def addFeatures(self):
+    def addFeatures(self, conn):
         features = []
         with gzip.open('/'.join([self.in_d, 'data.tsv.gz']), 'r') as in_f:
             features = codecs.decode(in_f.readline()).rstrip().split('\t')[1:]
-        conn = sqlite3.connect('/'.join([self.out_d, 
-                                    'metadata.sqlite']))
         curs = conn.cursor()
 
         with conn:
@@ -51,7 +48,7 @@ class Converter:
                                 VALUES (''' + str(ix) +
                                 ',"' + feature + '")')
 
-    def getType(self, variableName):
+    def getType(self, variableName, conn):
         conn = sqlite3.connect('/'.join([self.out_d, 
                                     'metadata.sqlite']))
         curs = conn.cursor()
@@ -63,9 +60,7 @@ class Converter:
 
         return curs.fetchone()[0]
 
-    def createTables(self):
-        conn = sqlite3.connect('/'.join([self.out_d, 
-                                    'metadata.sqlite']))
+    def createTables(self, conn):
         curs = conn.cursor()
 
         with conn:
@@ -92,10 +87,8 @@ class Converter:
                         (featureID INTEGER PRIMARY KEY, 
                          featureName TEXT)''')
 
-    def getSampleID(self, sampleName):
+    def getSampleID(self, sampleName, conn):
         #NOTE: Can only be called AFTER sampleID is inserted
-        conn = sqlite3.connect('/'.join([self.out_d, 
-                                    'metadata.sqlite']))
         curs = conn.cursor()
 
         with conn:
@@ -105,11 +98,9 @@ class Converter:
             
         return curs.fetchone()[0]
 
-    def getVarID(self, varName):
+    def getVarID(self, varName, conn):
         #NOTE: Should work as long as this is only called after
         #   variableTable is made in type_converter
-        conn = sqlite3.connect('/'.join([self.out_d, 
-                                    'metadata.sqlite']))
         curs = conn.cursor()
 
         with conn:
@@ -119,47 +110,18 @@ class Converter:
 
         return curs.fetchone()[0]
 
-    def addInt(self, line):
-        sampleID = self.getSampleID(line[0])
-        variableID = self.getVarID(line[1])
-        value = line[2]
+    def addInt(self, ints, conn):
+        curs = conn.cursor()
+        curs.executemany("INSERT INTO integerTable VALUES (?,?,?)", ints)
 
-        conn = sqlite3.connect('/'.join([self.out_d, 
-                                    'metadata.sqlite']))
+    def addReal(self, reals, conn):
+        curs = conn.cursor()
+        curs.executemany("INSERT INTO realTable VALUES (?,?,?)", reals)
+
+    def addText(self, texts, conn):
         curs = conn.cursor()
 
-        with conn:
-            curs.execute("INSERT INTO integerTable VALUES (" +
-                            str(sampleID) + ',' + str(variableID) +
-                            ',"' + value + '")')
-
-    def addReal(self, line):
-        sampleID = self.getSampleID(line[0])
-        variableID = self.getVarID(line[1])
-        value = line[2]
-
-        conn = sqlite3.connect('/'.join([self.out_d, 
-                                    'metadata.sqlite']))
-        curs = conn.cursor()
-
-        with conn:
-            curs.execute("INSERT INTO realTable VALUES (" +
-                            str(sampleID) + ',' + str(variableID) +
-                            ',"' + value + '")')
-
-    def addText(self, line):
-        sampleID = self.getSampleID(line[0])
-        variableID = self.getVarID(line[1])
-        value = line[2]
-
-        conn = sqlite3.connect('/'.join([self.out_d, 
-                                    'metadata.sqlite']))
-        curs = conn.cursor()
-
-        with conn:
-            curs.execute("INSERT INTO textTable VALUES (" +
-                            str(sampleID) + ',' + str(variableID) +
-                            ',"' + value + '")')
+        curs.executemany("INSERT INTO textTable VALUES (?,?,?)", texts)
 
     def makeDescription(self):
         descriptionMaker = DescriptionMaker(self.in_d, self.out_d)
@@ -167,30 +129,56 @@ class Converter:
 
     def convert(self):
 
-        self.createTables()
+        conn = sqlite3.connect('/'.join([self.out_d,
+                                            'metadata.sqlite']))
+        self.createTables(conn)
 
         in_file = gzip.open('/'.join([self.in_d, 'metadata.tsv.gz']), 'r')
         header = in_file.readline()
         cur_type = ''
-        self.addFeatures()
+        self.addFeatures(conn)
+        
 
-        for line in in_file:
+        ints = []
+        reals = []
+        texts = []
+
+        for ix, line in enumerate(in_file):
             line = codecs.decode(line).rstrip().split('\t')
 
             
-
-            sampleID = self.addSample(line[0])
+            self.addSample(line[0], conn)
+            sampleID = self.getSampleID(line[0], conn)
             variable = line[1]
             value = line[2]
 
-            cur_type = self.getType(variable)
+            cur_type = self.getType(variable, conn)
+
+            variable = self.getVarID(variable, conn)
 
             if cur_type == "integer":
-                self.addInt(line)
+                ints.append((sampleID, variable, value))
             elif cur_type == "real":
-                self.addReal(line)
+                reals.append((sampleID, variable, value))
             else:
-                self.addText(line)
+                texts.append((sampleID, variable, value))
+
+            if ix % self.CHUNK_SIZE == 0 and ix > 0:
+                self.addInt(ints, conn)
+                self.addReal(reals, conn)
+                self.addText(texts, conn)
+                conn.commit()
+                ints = []
+                reals = []
+                texts = []
+
+            final_ix = ix
+        if len(ints) > 0:
+            self.addInt(ints, conn)
+            self.addReal(reals, conn)
+            self.addText(texts, conn)
+        conn.commit()
+        
         print("sql_converter: " + str(time.time() - self.seconds) +
                 " seconds")
         self.makeDescription()

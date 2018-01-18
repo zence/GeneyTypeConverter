@@ -21,3 +21,6 @@
 
 * Jan-11-2018:
     * JsonMaker's putOne() function was not working properly. It now runs as it should, as well as differentiating between text and continuous variables, although I now realize that that is unnecessary, since putOne() should never be called on a variable that is an integer or real.
+
+* v 1.0.2 (Jan-18-2018):
+    * sql_maker has been optimized to improve insert speeds

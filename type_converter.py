@@ -9,6 +9,7 @@ import shutil
 from json_maker import JsonMaker
 from sql_converter import Converter
 from hdf5_converter import H5Converter
+from description_maker import DescriptionMaker
 
 #   1) Read file into sqlite database
 #   2) Put all distinct variables in sets
@@ -130,7 +131,7 @@ class UniqueVarChecker:
 
         #NOTE: test_converter.py will not function properly if this line is
         #           not commented out
-        os.remove('/'.join([in_d, 'temp.sqlite']))
+        #os.remove('/'.join([in_d, 'temp.sqlite']))
         
 
 
@@ -189,14 +190,27 @@ class UniqueVarChecker:
 
         self.makeFinal(in_d, out_d, typesDict)
 
-
+    def justDescription(self, in_d, out_d):
+        """
+            Called if '-s' is given
+        """
+        in_d = in_d.rstrip('/')
+        out_d = out_d.rstrip('/')
+        if not os.path.exists(in_d):
+            print("\033[91m[ERROR]\033[0m Input path not found :(")
+            return
+        descriptionMaker = DescriptionMaker(in_d, out_d)
+        descriptionMaker.make_description()
 
 class Main:
 
     def __init__(self):
         args = self.parse_args()
         self.checker = UniqueVarChecker()
-        self.checker.check(args.input_directory, args.output_directory, args.force)
+        if not args.simple:
+            self.checker.check(args.input_directory, args.output_directory, args.force)
+        else:
+            self.checker.justDescription(args.input_directory, args.output_directory)
 
     def parse_args(self):
         parsInputHelp = "path to directory where data exists and output "
@@ -210,6 +224,8 @@ class Main:
                             help=parsOutputHelp)
         parser.add_argument("-f", "--force", action="store_true",
                             help="run program without warnings")
+        parser.add_argument("-s", "--simple", action="store_true",
+                            help="run simplified version of program")
         args = parser.parse_args()
         
         return args

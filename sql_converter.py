@@ -13,10 +13,10 @@ class Converter:
         self.CHUNK_SIZE = 10000
 
     def addSample(self, sampleName, conn):
+        '''Adds a sample to sampleTable if it is not already in the table'''
+        #NOTE: This could be optimized by 
         sampleID = 0
         curs = conn.cursor()
-
-        ##TODO: Prep this for first insert
 
         with conn:
             curs.execute('''SELECT count(*)
